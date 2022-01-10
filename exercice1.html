@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <title>Formes</title>
+    <script src="./ressources/d3.v3.min.js"></script>
+  </head>
+  <div id="chart" style="width: 400; height: 400"></div>
+  <script>
+    var width = 300;
+    var height = 300;
+
+    var color = d3.scale.linear()
+    .range(["steelblue", "brown"])
+    .interpolate(d3.interpolateHcl)
+    .domain([0, 200]);
+
+    var svg = d3.select("#chart")
+    .append('svg')
+    .attr('width', width )
+    .attr('height', height)
+    .style('background-color', color(0));
+
+    var cercle = svg.append('circle')
+    .attr("r",20)
+    .attr("cx", 120)
+    .attr("cy", 80)
+    .attr("fill", color(200));
+
+    var line= svg.append('line')
+    .attr('x1',20)
+    .attr('y1',20)
+    .attr('x2',width/2)
+    .attr('y2',height/2)
+    .attr("stroke", color(150))
+    .attr("stroke-width", 3);
+    
+    var rect= svg.append('rect')
+    .attr('x',200)
+    .attr('y',200)
+    .attr('fill','#7b1544');
+
+    function actionMO (){
+    d3.select(this)
+    
+    }
+
+    function actionMU (){
+    d3.select(this)
+    
+    }
+  </script>
+</html>
