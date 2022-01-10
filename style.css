@@ -43,6 +43,12 @@ h1 {
   overflow: hidden;
 }
 
+#chart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 
 
 
