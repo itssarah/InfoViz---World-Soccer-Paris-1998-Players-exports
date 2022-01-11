@@ -3,6 +3,8 @@
     <title>Formes</title>
     <script src="./ressources/d3.v3.min.js"></script>
     <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script type="text/javascript" src="fisheye.js"></script>
     <style>
       body {
         display: flex;
@@ -23,109 +25,169 @@
         font-family: sans-serif;
         font-size: 10px;
       }
+
+      /* magnifier glass as circle */
+      .lens {
+        stroke: gray;
+        stroke-width: 2px;
+        stroke-opacity: 0;
+        fill: none;
+      
+
+      
+      }
     </style>
   </head>
+  <body>
+    <svg id="viz" width="960" height="600"></svg>
+    <script>
+      var svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
 
-  <svg id="viz" width="960" height="600"></svg>
-  <script>
-    var svg = d3.select("svg"),
-      width = +svg.attr("width"),
-      height = +svg.attr("height");
+      var color = d3.scaleOrdinal(d3.schemeCategory20);
 
-    var color = d3.scaleOrdinal(d3.schemeCategory20);
+      var width = 960;
+      var height = 600;
 
-    var width = 960;
-    var height = 600;
+      d3.csv("football.net.txt", function (data) {
+        data = JSON.stringify(data);
+        data = JSON.parse(data);
 
-    d3.csv("football.net.txt", function (data) {
-      data = JSON.stringify(data);
-      data = JSON.parse(data);
-
-      var nodes = data.slice(0, 35).map(function (d) {
-        return {
-          id: d["*Vertices     35"].split(/\s+/)[1],
-          group: 1,
-          name: d["*Vertices     35"].split(/\s+/)[2].slice(1,4),
-          x: d["*Vertices     35"].split(/\s+/)[3],
-          y: d["*Vertices     35"].split(/\s+/)[4],
-          r: d["*Vertices     35"].split(/\s+/)[5],
-        };
-      });
-
-      var links = data.slice(36, 153).map(function (d) {
-        return {
-          source: d["*Vertices     35"].split(/\s+/)[1],
-          target: d["*Vertices     35"].split(/\s+/)[2],
-          value: d["*Vertices     35"].split(/\s+/)[3],
-        };
-      });
-
-      data = { nodes, links };
-
-      var link = svg
-        .append("g")
-        .attr("class", "links")
-        .selectAll("line")
-        .data(data.links)
-        .enter()
-        .append("line")
-        .attr("x1", function (d) {
-          console.log(data.nodes[d.source - 1].x);
-          return parseFloat(scale(data.nodes[d.source - 1].x, 0, 1, 0, 960));
-        })
-        .attr("y1", function (d) {
-          return parseFloat(scale(data.nodes[d.source - 1].y, 0, 1, 0, 600));
-        })
-        .attr("x2", function (d) {
-          return parseFloat(scale(data.nodes[d.target - 1].x, 0, 1, 0, 960));
-        })
-        .attr("y2", function (d) {
-          return parseFloat(scale(data.nodes[d.target - 1].y, 0, 1, 0, 600));
-        });
-      var node = svg
-        .append("g")
-        .attr("class", "nodes")
-        .selectAll("g")
-        .data(data.nodes)
-        .enter()
-        .append("g");
-
-      var circles = node
-        .append("circle")
-        .attr("r", function (d) {
-          return parseFloat(d.r) * 12;
-        })
-        .attr("cx", function (d) {
-          return parseFloat(scale(d.x, 0, 1, 0, 960));
-        })
-        .attr("cy", function (d) {
-          return parseFloat(scale(d.y, 0, 1, 0, 600));
-        })
-        .attr("fill", function (d) {
-          return color(d.group);
+        var nodes = data.slice(0, 35).map(function (d) {
+          return {
+            id: d["*Vertices     35"].split(/\s+/)[1],
+            group: 1,
+            name: d["*Vertices     35"].split(/\s+/)[2].slice(1, 4),
+            x: d["*Vertices     35"].split(/\s+/)[3],
+            y: d["*Vertices     35"].split(/\s+/)[4],
+            r: d["*Vertices     35"].split(/\s+/)[5],
+          };
         });
 
-      function scale(number, inMin, inMax, outMin, outMax) {
-        return (
-          ((number - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin
-        );
-      }
-
-      var lables = node
-        .append("text")
-        .text(function (d) {
-          return d.name;
-        })
-        .attr("x", function (d) {
-          return parseFloat(scale(d.x, 0, 1, 0, 960) + 8);
-        })
-        .attr("y", function (d) {
-          return parseFloat(scale(d.y, 0, 1, 0, 600));
+        var links = data.slice(36, 153).map(function (d) {
+          return {
+            source: d["*Vertices     35"].split(/\s+/)[1],
+            target: d["*Vertices     35"].split(/\s+/)[2],
+            value: d["*Vertices     35"].split(/\s+/)[3],
+          };
         });
 
-      node.append("title").text(function (d) {
-        return d.id;
+        data = { nodes, links };
+
+        var link = svg
+          .append("g")
+          .attr("class", "links")
+          .selectAll("line")
+          .data(data.links)
+          .enter()
+          .append("line")
+          .attr("x1", function (d) {
+            return parseFloat(scale(data.nodes[d.source - 1].x, 0, 1, 0, 960));
+          })
+          .attr("y1", function (d) {
+            return parseFloat(scale(data.nodes[d.source - 1].y, 0, 1, 0, 600));
+          })
+          .attr("x2", function (d) {
+            return parseFloat(scale(data.nodes[d.target - 1].x, 0, 1, 0, 960));
+          })
+          .attr("y2", function (d) {
+            return parseFloat(scale(data.nodes[d.target - 1].y, 0, 1, 0, 600));
+          });
+        var node = svg
+          .append("g")
+          .attr("class", "nodes")
+          .selectAll("g")
+          .data(data.nodes)
+          .enter()
+          .append("g");
+
+        var circles = node
+          .append("circle")
+          .attr("r", function (d) {
+            return 6;
+          })
+          .attr("cx", function (d) {
+            return parseFloat(scale(d.x, 0, 1, 0, 960));
+          })
+          .attr("cy", function (d) {
+            return parseFloat(scale(d.y, 0, 1, 0, 600));
+          })
+          .attr("fill", function (d) {
+            return color(d.group);
+          });
+
+        function scale(number, inMin, inMax, outMin, outMax) {
+          return (
+            ((number - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin
+          );
+        }
+
+        var lables = node
+          .append("text")
+          .text(function (d) {
+            return d.name;
+          })
+          .attr("x", function (d) {
+            return parseFloat(scale(d.x, 0, 1, 0, 960) + 8);
+          })
+          .attr("y", function (d) {
+            return parseFloat(scale(d.y, 0, 1, 0, 600));
+          });
+
+        node.append("title").text(function (d) {
+          return d.id;
+        });
+
+        // de fonction :
+
+        var fisheye = d3.fisheye.circular().radius(100).distortion(2);
+
+        // magnifier as circle
+        var lens = svg
+          .append("circle")
+          .attr("class", "lens")
+          .attr("r", fisheye.radius());
+
+        // specify angle where magnifier handle should "attach" to body
+        var omega = 0.78;
+
+        //b. Ajout à l’svg
+
+        svg.on("mousemove", function () {
+          fisheye.focus(d3.mouse(this));
+
+          var mouseX = d3.mouse(this)[0];
+          var mouseY = d3.mouse(this)[1];
+          var r = fisheye.radius();
+          console.log(mouseX,mouseY,r)
+
+          // display magnifier as circle
+          lens.attr("cx", mouseX).attr("cy", mouseY).style("stroke-opacity",10);
+          node.each(function(d) { d.fisheye = fisheye(d); })
+          
+          node.selectAll("circle")
+            .attr("cx", function (d) {
+              return scale(d.fisheye.x, 0, 1, 0, 960);
+            })
+            .attr("cy", function (d) {
+              return scale(d.fisheye.y, 0, 1, 0, 600);
+            })
+            .attr("r", function (d) {
+              return d.fisheye.z * 10;
+            });
+
+          lables
+            .attr("dx", function (d) {
+              return d.fisheye.x;
+            })
+            .attr("dy", function (d) {
+              return d.fisheye.y;
+            });
+
+          
+        });
       });
-    });
-  </script>
+    </script>
+  </body>
 </html>
