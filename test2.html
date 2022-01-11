@@ -42,11 +42,10 @@
       data = JSON.parse(data);
 
       var nodes = data.slice(0, 35).map(function (d) {
-        console.log(d["*Vertices     35"].split(/\s+/));
         return {
           id: d["*Vertices     35"].split(/\s+/)[1],
           group: 1,
-          name: d["*Vertices     35"].split(/\s+/)[2],
+          name: d["*Vertices     35"].split(/\s+/)[2].slice(1,4),
           x: d["*Vertices     35"].split(/\s+/)[3],
           y: d["*Vertices     35"].split(/\s+/)[4],
           r: d["*Vertices     35"].split(/\s+/)[5],
@@ -62,7 +61,6 @@
       });
 
       data = { nodes, links };
-      console.log(data);
 
       var link = svg
         .append("g")
@@ -71,10 +69,19 @@
         .data(data.links)
         .enter()
         .append("line")
-        .attr("stroke-width", function (d) {
-          return Math.sqrt(d.value);
+        .attr("x1", function (d) {
+          console.log(data.nodes[d.source - 1].x);
+          return parseFloat(scale(data.nodes[d.source - 1].x, 0, 1, 0, 960));
+        })
+        .attr("y1", function (d) {
+          return parseFloat(scale(data.nodes[d.source - 1].y, 0, 1, 0, 600));
+        })
+        .attr("x2", function (d) {
+          return parseFloat(scale(data.nodes[d.target - 1].x, 0, 1, 0, 960));
+        })
+        .attr("y2", function (d) {
+          return parseFloat(scale(data.nodes[d.target - 1].y, 0, 1, 0, 600));
         });
-
       var node = svg
         .append("g")
         .attr("class", "nodes")
