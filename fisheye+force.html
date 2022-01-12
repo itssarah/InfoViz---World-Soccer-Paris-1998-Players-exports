@@ -10,6 +10,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
       }
       .links line {
         stroke: #999;
@@ -37,17 +38,39 @@
   </head>
   <body>
     <svg id="viz" width="960" height="600"></svg>
+    <div width="50%">
+      <fieldset>
+        <legend>Select the interactions to apply</legend>
+        <input
+          id="fisheye"
+          type="checkbox"
+          checked="on"
+          onclick="calcFish()"
+        />Fisheye<br />
+        <input
+          id="force-diagram"
+          type="checkbox"
+          onclick="calc()"
+        />Force diagram<br />
+        <br />
+      </fieldset>
+    </div>
     <script>
       var svg = d3.select("svg"),
         width = +svg.attr("width"),
         height = +svg.attr("height");
 
+      var link;
+      var text;
+      var circles;
+      var fisheye;
       var color = d3.scaleOrdinal(d3.schemeCategory20);
 
       var width = 960;
       var height = 500;
+      var data;
 
-      d3.csv("football.net.txt", function (data) {
+      var test = function() {  d3.csv("football.net.txt", function (data) {
         data = JSON.stringify(data);
         data = JSON.parse(data);
 
@@ -72,27 +95,25 @@
           };
         });
 
-
-        nodes.forEach(element => {
-          element.group = 0
-          var res = links.filter(x => (x.source === element.id));
-          if (res.length ) {
-            nexports = res.map(item => item.value).reduce((prev, next) => parseFloat(prev) + parseFloat(next));
-
+        nodes.forEach((element) => {
+          element.group = 0;
+          var res = links.filter((x) => x.source === element.id);
+          if (res.length) {
+            nexports = res
+              .map((item) => item.value)
+              .reduce((prev, next) => parseFloat(prev) + parseFloat(next));
           }
 
-          var res = links.filter(x => (x.target === element.id));
-          if (res.length ) {
-            nimports = res.map(item => item.value).reduce((prev, next) => parseFloat(prev) + parseFloat(next));
-
+          var res = links.filter((x) => x.target === element.id);
+          if (res.length) {
+            nimports = res
+              .map((item) => item.value)
+              .reduce((prev, next) => parseFloat(prev) + parseFloat(next));
           }
           element.group = nexports - nimports;
-          console.log(element.group);
-          
         });
 
         data = { nodes, links };
-
         //function to scale the coordinates
         function scale(number, inMin, inMax, outMin, outMax) {
           return (
@@ -102,7 +123,7 @@
 
         /////////////////////////////////////// creating the network /////////////////
 
-        var link = svg
+        link = svg
           .append("g")
           .attr("class", "links")
           .selectAll("line")
@@ -125,7 +146,7 @@
             return Math.sqrt(d.value);
           });
 
-        var node = svg
+        node = svg
           .append("g")
           .attr("class", "nodes")
           .selectAll("g")
@@ -133,7 +154,7 @@
           .enter()
           .append("g");
 
-        var circles = node
+        circles = node
           .append("circle")
           .attr("r", function (d) {
             return d.r;
@@ -148,7 +169,7 @@
             return color(d.group);
           });
 
-        var text = node
+        text = node
           .append("text")
           .attr("class", "text")
           .attr("dy", function (d) {
@@ -168,7 +189,7 @@
         /////////////////////////////// fisheye ///////////////////////
         // déclaration de fonction :
 
-        var fisheye = d3.fisheye.circular().radius(100).distortion(5);
+        fisheye = d3.fisheye.circular().radius(100).distortion(5);
 
         // magnifier as circle
         var lens = svg
@@ -177,7 +198,7 @@
           .attr("r", fisheye.radius());
 
         // Ajout à l’svg
-
+        
         svg.on("mousemove", function () {
           fisheye.focus(d3.mouse(this));
 
@@ -203,7 +224,7 @@
               return d.fisheye.y;
             })
             .attr("r", function (d) {
-              return d.fisheye.z * 4.5;
+              return d.fisheye.z * 4;
             });
 
           text
@@ -233,7 +254,7 @@
 
         /// a. Initialiser la force
 
-        var simulation = d3
+        simulation = d3
           .forceSimulation()
           .force(
             "link",
@@ -281,31 +302,73 @@
         }
 
         // Create a drag handler and append it to the node object instead
-        var drag_handler = d3
-          .drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended);
-
-        drag_handler(node);
-
-        function dragstarted(d) {
-          if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-          d.fx = d.x;
-          d.fy = d.y;
-        }
-
-        function dragged(d) {
-          d.fx = d3.event.x;
-          d.fy = d3.event.y;
-        }
-
-        function dragended(d) {
-          if (!d3.event.active) simulation.alphaTarget(0);
-          d.fx = null;
-          d.fy = null;
-        }
+        force_on();
       });
+    }
+      
+    test();
+    var drag_handler = d3
+        .drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+
+      function dragstarted(d) {
+        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+
+      function dragged(d) {
+        d.fx = d3.event.x;
+        d.fy = d3.event.y;
+      }
+
+      function dragended(d) {
+        if (!d3.event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+      var node;
+      var simulation;
+      function force_on() {
+        if (isforce === true) {
+          drag_handler(node);
+        } else {
+          node.on(".drag", null);
+        }
+      }
+
+      function fish_on() {}
+
+      var isfisheye = false;
+      var isforce = false;
+
+      function calc() {
+        console.log(isforce);
+        if (document.getElementById("force-diagram").checked) {
+          isforce = true;
+        } else {
+          isforce = false;
+        }
+        force_on();
+      }
+
+      function calcFish() {
+        console.log(isfisheye);
+        if (document.getElementById("fisheye").checked) {
+          isfisheye = true;
+          svg.selectAll("line").remove();
+					node.selectAll("circle").remove();
+					node.selectAll(".text").remove();
+          test();
+        } else {
+          isfisheye = false;
+          svg.on("mousemove", null);
+        }
+        console.log(isfisheye);
+        fish_on();
+      }
     </script>
   </body>
 </html>
