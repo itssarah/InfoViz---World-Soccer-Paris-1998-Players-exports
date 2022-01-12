@@ -71,8 +71,24 @@
             value: d["*Vertices     35"].split(/\s+/)[3],
           };
         });
-        nodes.array().forEach(element => {
-          console.log(element);
+
+
+        nodes.forEach(element => {
+          element.group = 0
+          var res = links.filter(x => (x.source === element.id));
+          if (res.length ) {
+            nexports = res.map(item => item.value).reduce((prev, next) => parseFloat(prev) + parseFloat(next));
+
+          }
+
+          var res = links.filter(x => (x.target === element.id));
+          if (res.length ) {
+            nimports = res.map(item => item.value).reduce((prev, next) => parseFloat(prev) + parseFloat(next));
+
+          }
+          element.group = nexports - nimports;
+          console.log(element.group);
+          
         });
 
         data = { nodes, links };
