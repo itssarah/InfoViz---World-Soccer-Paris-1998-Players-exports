@@ -76,7 +76,10 @@
 
       var fisheye = d3.fisheye.circular().radius(100).distortion(5);
 
-      
+      var force = d3.layout.force()
+				.charge(-440)
+				.linkDistance(60)
+				.size([width, height]);
 
       var svg = d3
         .select("#chart1")
@@ -128,6 +131,9 @@
             value: d["*Vertices     35"].split(/\s+/)[3],
           };
         });
+
+        force.nodes(data.nodes).links(data.links);
+        
 
         data = { nodes, links };
         console.log(data);

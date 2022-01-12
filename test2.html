@@ -32,9 +32,6 @@
         stroke-width: 2px;
         stroke-opacity: 0;
         fill: none;
-      
-
-      
       }
     </style>
   </head>
@@ -54,14 +51,16 @@
         data = JSON.stringify(data);
         data = JSON.parse(data);
 
+        // transforming the data  to JSON
+
         var nodes = data.slice(0, 35).map(function (d) {
           return {
             id: d["*Vertices     35"].split(/\s+/)[1],
             group: 1,
             name: d["*Vertices     35"].split(/\s+/)[2].slice(1, 4),
-            x: d["*Vertices     35"].split(/\s+/)[3],
-            y: d["*Vertices     35"].split(/\s+/)[4],
-            r: d["*Vertices     35"].split(/\s+/)[5],
+            x: scale(d["*Vertices     35"].split(/\s+/)[3], 0, 1, 0, 960),
+            y: scale(d["*Vertices     35"].split(/\s+/)[4], 0, 1, 0, 600),
+            r: 6,
           };
         });
 
@@ -75,6 +74,15 @@
 
         data = { nodes, links };
 
+        //function to scale the coordinates
+        function scale(number, inMin, inMax, outMin, outMax) {
+          return (
+            ((number - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin
+          );
+        }
+
+        /////////////////////////////////////// creating the network /////////////////
+
         var link = svg
           .append("g")
           .attr("class", "links")
@@ -83,17 +91,18 @@
           .enter()
           .append("line")
           .attr("x1", function (d) {
-            return parseFloat(scale(data.nodes[d.source - 1].x, 0, 1, 0, 960));
+            return data.nodes[d.source - 1].x;
           })
           .attr("y1", function (d) {
-            return parseFloat(scale(data.nodes[d.source - 1].y, 0, 1, 0, 600));
+            return data.nodes[d.source - 1].y;
           })
           .attr("x2", function (d) {
-            return parseFloat(scale(data.nodes[d.target - 1].x, 0, 1, 0, 960));
+            return data.nodes[d.target - 1].x;
           })
           .attr("y2", function (d) {
-            return parseFloat(scale(data.nodes[d.target - 1].y, 0, 1, 0, 600));
+            return data.nodes[d.target - 1].y;
           });
+
         var node = svg
           .append("g")
           .attr("class", "nodes")
@@ -105,43 +114,39 @@
         var circles = node
           .append("circle")
           .attr("r", function (d) {
-            return 6;
+            return d.r;
           })
           .attr("cx", function (d) {
-            return parseFloat(scale(d.x, 0, 1, 0, 960));
+            return d.x;
           })
           .attr("cy", function (d) {
-            return parseFloat(scale(d.y, 0, 1, 0, 600));
+            return d.y;
           })
           .attr("fill", function (d) {
             return color(d.group);
           });
 
-        function scale(number, inMin, inMax, outMin, outMax) {
-          return (
-            ((number - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin
-          );
-        }
-
-        var lables = node
+        var text = node
           .append("text")
+          .attr("class", "text")
+          .attr("dy", function (d) {
+            return d.y;
+          })
+          .attr("dx", function (d) {
+            return d.x + 10;
+          })
           .text(function (d) {
             return d.name;
-          })
-          .attr("x", function (d) {
-            return parseFloat(scale(d.x, 0, 1, 0, 960) + 8);
-          })
-          .attr("y", function (d) {
-            return parseFloat(scale(d.y, 0, 1, 0, 600));
           });
 
         node.append("title").text(function (d) {
           return d.id;
         });
 
-        // de fonction :
+        /////////////////////////////// fisheye ///////////////////////
+        // déclaration de fonction :
 
-        var fisheye = d3.fisheye.circular().radius(100).distortion(2);
+        var fisheye = d3.fisheye.circular().radius(100).distortion(5);
 
         // magnifier as circle
         var lens = svg
@@ -149,10 +154,7 @@
           .attr("class", "lens")
           .attr("r", fisheye.radius());
 
-        // specify angle where magnifier handle should "attach" to body
-        var omega = 0.78;
-
-        //b. Ajout à l’svg
+        // Ajout à l’svg
 
         svg.on("mousemove", function () {
           fisheye.focus(d3.mouse(this));
@@ -160,33 +162,103 @@
           var mouseX = d3.mouse(this)[0];
           var mouseY = d3.mouse(this)[1];
           var r = fisheye.radius();
-          console.log(mouseX,mouseY,r)
 
           // display magnifier as circle
-          lens.attr("cx", mouseX).attr("cy", mouseY).style("stroke-opacity",10);
-          node.each(function(d) { d.fisheye = fisheye(d); })
-          
-          node.selectAll("circle")
+          // lens
+          // .attr("cx", mouseX)
+          //.style("stroke-opacity", 10)
+          // .attr("cy", mouseY);
+
+          node.each(function (d) {
+            d.fisheye = fisheye(d);
+          });
+
+          circles
             .attr("cx", function (d) {
-              return scale(d.fisheye.x, 0, 1, 0, 960);
+              return d.fisheye.x;
             })
             .attr("cy", function (d) {
-              return scale(d.fisheye.y, 0, 1, 0, 600);
+              return d.fisheye.y;
             })
             .attr("r", function (d) {
-              return d.fisheye.z * 10;
+              return d.fisheye.z * 4.5;
             });
 
-          lables
+          text
             .attr("dx", function (d) {
-              return d.fisheye.x;
+              return d.fisheye.x + 15;
             })
             .attr("dy", function (d) {
               return d.fisheye.y;
             });
 
-          
+          link
+            .attr("x1", function (d) {
+              return data.nodes[d.source - 1].fisheye.x;
+            })
+            .attr("y1", function (d) {
+              return data.nodes[d.source - 1].fisheye.y;
+            })
+            .attr("x2", function (d) {
+              return data.nodes[d.target - 1].fisheye.x;
+            })
+            .attr("y2", function (d) {
+              return data.nodes[d.target - 1].fisheye.y;
+            });
         });
+
+        ///////////////////////////// algorithme de force /////////////////
+
+        /// a. Initialiser la force
+        var force = d3.layout
+          .force()
+          .size([width, height])
+          .charge(-400)
+          .linkDistance(40)
+          .on("tick", tick);
+
+        //b. Appliquer la force au noeuds et liens :
+        force.links(data.links);
+        force.nodes(data.nodes);
+        //c. Ajouter la fonction de force aux nœuds et liens
+
+        function tick() {
+          link
+            .attr("x1", function (d) {
+              return d.nodes[d.source - 1].x;
+            })
+            .attr("y1", function (d) {
+              return d.nodes[d.source - 1].y;
+            })
+            .attr("x2", function (d) {
+              return d.nodes[d.target - 1].x;
+            })
+            .attr("y2", function (d) {
+              return d.nodes[d.target - 1].y;
+            });
+
+          node
+            .attr("cx", function (d) {
+              return d.x;
+            })
+            .attr("cy", function (d) {
+              return d.y;
+            });
+        }
+
+        //d. Ajouter la fonction darg aux nœuds
+        //....call(drag);
+        drag = force.drag().on("dragstart", function (d) {
+          d3.select(this).classed("fixed", (d.fixed = true));
+        });
+
+        //e. Lancer l’algorithme
+        //force.start();
+
+
+
+
+
       });
     </script>
   </body>
