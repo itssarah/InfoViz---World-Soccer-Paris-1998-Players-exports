@@ -5,10 +5,10 @@
     <script src="./ressources/d3.v3.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   </head>
-  <div id="chart" style="width: 400; height: 400"></div>
+  <div id="chart" class="container" ></div>
 
   <script>
-    var width = 300;
+    var width = 370;
     var height = 300;
 
     var color = d3.scale
@@ -21,8 +21,7 @@
       .select("#chart")
       .append("svg")
       .attr("width", width)
-      .attr("height", height)
-      .style("background-color", color(0));
+      .attr("height", height);
 
     var cercle = svg
       .append("circle")

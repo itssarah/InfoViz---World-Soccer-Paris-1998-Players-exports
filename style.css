@@ -33,12 +33,23 @@ h1 {
 }
 
 .container {
+  background: #e65c00; /* fallback for old browsers */
+  background: -webkit-linear-gradient(
+    to right,
+    #f9d423,
+    #e65c00
+  ); /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(
+    to right,
+    #f9d423,
+    #e65c00
+  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
   display: flex;
   justify-content: center;
   align-items: center;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(100, 100, 100, 0.1);
-  width: 600px;
   max-width: 100%;
   overflow: hidden;
 }
@@ -48,9 +59,6 @@ h1 {
   justify-content: center;
   align-items: center;
 }
-
-
-
 
 .blue {
   background: #005aa7; /* fallback for old browsers */
